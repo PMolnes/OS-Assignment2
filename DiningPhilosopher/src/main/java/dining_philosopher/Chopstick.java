@@ -10,7 +10,7 @@ public class Chopstick {
         this.available = true;
     }
 
-    public boolean checkAvailability() {
+    public boolean available() {
         return this.available;
     }
 
