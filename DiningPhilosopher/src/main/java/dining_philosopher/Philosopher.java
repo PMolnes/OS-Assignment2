@@ -1,41 +1,19 @@
 package dining_philosopher;
 
-import java.util.Random;
+public class Philosopher extends Thread {
 
-public class Philosopher implements Runnable {
-
+    private Monitor monitor;
     private int id;
-    private Chopstick leftChopstick;
-    private Chopstick rightChopstick;
-    private State state;
 
-    public Philosopher(int id, Chopstick leftChopstick, Chopstick rightChopstick) {
+    public Philosopher(int id, Monitor monitor) {
         this.id = id;
-        this.leftChopstick = leftChopstick;
-        this.rightChopstick = rightChopstick;
-        this.state = State.THINKING;
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
-    }
-
-    public Chopstick getLeftChopstick() {
-        return leftChopstick;
-    }
-
-    public Chopstick getRightChopstick() {
-        return rightChopstick;
+        this.monitor = monitor;
     }
 
     @Override
     public void run() {
-        // etter random amount s 1-10 bli sulten
-        Random random = new Random();
-        this.state = State.HUNGRY;
+        for (int i = 0; i < 10; i++) {
+            monitor.tryEat(id);
+        }
     }
 }
