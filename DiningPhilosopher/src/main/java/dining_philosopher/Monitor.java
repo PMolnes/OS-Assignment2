@@ -4,54 +4,56 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Monitor {
-    Chopstick[] chopsticks = new Chopstick[5];
-    Philosopher[] philosophers = new Philosopher[5];
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock;
     private final Condition[] self;
+    private State state[];
 
     public Monitor() {
-        State[] states = new State[5];
+        lock = new ReentrantLock(true);
         self = new Condition[5];
+        state = new State[5];
+
         for (int i = 0; i < 5; i++) {
-            states[i] = State.THINKING;
-            chopsticks[i] = new Chopstick(i);
-        }
-        for (int i = 0; i < 5; i++) {
-            philosophers[i] = new Philosopher(i, chopsticks[i], chopsticks[(i + 4) % 5]);
+            self[i] = lock.newCondition();
+            state[i] = State.THINKING;
         }
     }
 
-    /**
-     *
-     * @param i
-     */
-    private void tryEat(int i) throws InterruptedException {
-        Philosopher philosopher = philosophers[i];
-        Chopstick leftChopstick = philosopher.getLeftChopstick();
-        Chopstick rightChopstick = philosopher.getRightChopstick();
-        if ((philosopher.getState() == State.HUNGRY) && (leftChopstick.available()) && (rightChopstick.available())) {
-            philosopher.setState(State.EATING);
-            leftChopstick.pickUp();
-            rightChopstick.pickUp();
-            // random amount of s 1 - 10?
-            leftChopstick.putDown();
-            rightChopstick.putDown();
-            philosopher.setState(State.THINKING);
+    public void tryEat(int i) {
+        try {
+            pickup(i);
+            putdown(i);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void availableChopsticks(int i) {
+        if ((state[(i + 1) % 5] != State.EATING) && (state[(i + 4) % 5] != State.EATING) && (state[i] == State.HUNGRY)) {
+            state[i] = State.EATING;
+            System.out.println("Philosopher " + i + " is eating.");
             self[i].signal();
-        } else {
-            self[i].wait();
         }
     }
 
+    private void pickup(int i) throws InterruptedException {
+        lock.lock();
+        state[i] = State.HUNGRY;
+        System.out.println("Philosopher " + i + " is hungry.");
+        availableChopsticks(i);
 
+        if (state[i] != State.EATING) self[i].await();
+        lock.unlock();
+    }
 
+    private void putdown(int i) {
+        lock.lock();
+        state[i] = State.THINKING;
+        System.out.println("Philosopher " + i + " is thinking...");
 
+        availableChopsticks((i + 1) % 5);
+        availableChopsticks((i + 4) % 5);
+
+        lock.unlock();
+    }
 }
-
-
-/**
- * 1. Philosopher is thinking...
- * 2. Philosopher gets hungry:
- * 3. Am I first in queue? No: wait Yes:
- * 4. Are the chopsticks to the right and left available? Yes: Eat no: Wait
- */
