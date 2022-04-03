@@ -11,13 +11,11 @@ public class Philosopher extends Thread {
     }
 
     /**
-     * Each thread (Philosopher) tries to eat 10 times.
-     * This can easily be turned into an infinite loop with a
-     * while (true) loop.
+     * Each thread (Philosopher) tries to eat an infinite amount of times.
      */
     @Override
     public void run() {
-        for (int i = 0; i < 10; i++) {
+        while (true) {
             monitor.tryEat(this.id);
         }
     }

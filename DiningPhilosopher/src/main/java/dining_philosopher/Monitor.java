@@ -1,5 +1,6 @@
 package dining_philosopher;
 
+import java.util.Random;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -44,10 +45,11 @@ public class Monitor {
      * are available.
      * @param i Philosopher that tries to pickup chopsticks.
      */
-    private void availableChopsticks(int i) {
+    private void availableChopsticks(int i) throws InterruptedException {
         if ((state[(i + 1) % 5] != State.EATING) && (state[(i + 4) % 5] != State.EATING) && (state[i] == State.HUNGRY)) {
             state[i] = State.EATING;
             System.out.println("Philosopher " + i + " is eating.");
+            Thread.sleep(eatingDuration()); // Stimulate time it takes to eat.
             self[i].signal();
         }
     }
@@ -69,7 +71,7 @@ public class Monitor {
         lock.unlock();
     }
 
-    private void putdown(int i) {
+    private void putdown(int i) throws InterruptedException {
         lock.lock();
         state[i] = State.THINKING;
         System.out.println("Philosopher " + i + " is thinking...");
@@ -78,5 +80,15 @@ public class Monitor {
         availableChopsticks((i + 4) % 5);
 
         lock.unlock();
+    }
+
+    /**
+     * Returns a random int from 1000 to 4000
+     * which is the duration a Philosopher eats for.
+     * @return random number from 1000 to 4000 milliseconds.
+     */
+    private int eatingDuration() {
+        Random ran = new Random();
+        return (ran.nextInt(4) + 1) * 1000;
     }
 }

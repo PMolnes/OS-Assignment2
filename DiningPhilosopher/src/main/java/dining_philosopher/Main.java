@@ -21,13 +21,5 @@ public class Main {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        System.out.println();
-        System.out.println("  -      10 rounds of the    -");
-        System.out.println(" ---     Dining Philosophers -");
-        System.out.println("-----    Problem             -");
-        System.out.println("  -      - - - - - - - - - - -");
-        System.out.println("  -      - - - - - - - - - - -");
-        System.out.println("  -      - - - - - - - - - - -");
     }
 }
