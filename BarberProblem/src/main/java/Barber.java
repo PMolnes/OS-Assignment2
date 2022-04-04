@@ -1,7 +1,9 @@
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Barber extends Thread {
 
+    private final Random random = new Random();
     /**
      * This is the current customer the barber is
      * cutting/shaving.
@@ -31,7 +33,7 @@ public class Barber extends Thread {
      * @return true if the customer can get his hair cut, false if the
      * barber is busy.
      */
-    private synchronized boolean getIntoBarberChair(Customer customer) {
+    public synchronized boolean getIntoBarberChair(Customer customer) {
         if (isBusy()) return false;
 
         //Barber is not busy, and puts the customer as his currentCustomer
@@ -40,6 +42,27 @@ public class Barber extends Thread {
         //Wake up the barber
         this.notify();
         return true;
+    }
+
+    /**
+     * A customer tries to take a place in the waiting seats. Places the customer in a seat
+     * if there is space.
+     * @param customer to be placed in queue
+     * @return true if the customer gets placed in the queue, false if it's full.
+     * @throws Exception
+     */
+    public boolean placeCustomerInWaitingChair(Customer customer) throws Exception {
+        if (waitingCustomers.contains(customer)) {
+            throw new Exception("Customer " + customer.getId() + " already in queue.");
+        }
+        System.out.println("Customer " + customer.getId() + ": Wants to wait, " +
+                waitingCustomers.size() + " customer(s) already waiting.");
+        if (freeWaitingChairs() < 1) {
+            return false;
+        } else {
+            waitingCustomers.add(customer);
+            return true;
+        }
     }
 
     /**
@@ -64,5 +87,41 @@ public class Barber extends Thread {
      */
     private int freeWaitingChairs() {
         return this.waitingChairs - waitingCustomers.size();
+    }
+
+    private void cutCustomer() throws InterruptedException {
+        System.out.println("Barber: Giving haircut to customer: " + currentCustomer.getId() + "...");
+        int cutTime = random.nextInt(1000);
+        sleep(cutTime);
+        System.out.println("Barber: Finished haircut for customer " + currentCustomer.getId());
+
+        this.currentCustomer.notifyCutDone();
+
+        this.currentCustomer = null;
+    }
+
+    private Customer getNextWaitingCustomer() throws InterruptedException {
+        if (waitingCustomers.size() < 1) return null;
+
+        Customer customer = waitingCustomers.remove(0);
+        System.out.println("Customer " + customer.getId() + ": Sits down to get haircut.");
+        customer.notifyWaitingDone();
+        return customer;
+    }
+
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                sleepUntilCustomer();
+
+                while (currentCustomer != null) {
+                    cutCustomer();
+                    currentCustomer = getNextWaitingCustomer();
+                }
+            }
+        } catch(InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
